@@ -105,7 +105,7 @@ ManualSehGetCurrentEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-			  CurrentEntry->ThreadID == ThreadId ) 
+		      CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			return CurrentEntry;
 		}
@@ -141,7 +141,7 @@ ManualSehPopEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-			  CurrentEntry->ThreadID == ThreadId ) 
+		      CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			CurrentEntry->Active = FALSE;
 
