@@ -55,7 +55,7 @@ typedef struct _MANUALSEH_DATA
 namespace ManualSEH
 {
 	//
-	// Global buffer containing space for 20 total MANUALSEH_DATA objects
+	// Global buffer containing space for 64 total MANUALSEH_DATA objects
 	//
 	extern PMANUALSEH_DATA g_SEHData;
 
