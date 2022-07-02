@@ -1,5 +1,5 @@
 # ManualSEH
-A lightweight utility containing manually written SEH for manually mapped images
+A lightweight utility containing manually written SEH for manually mapped images or images that do not contain any exception data
 
 # Things worth noting
 * Works in both usermode and kernel mode as long as you have an exception handler
