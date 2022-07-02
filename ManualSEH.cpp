@@ -226,7 +226,8 @@ ManualSEH::ExceptionHandler(
 		ManualSehPopEntry( ManualSehCurrentThread( ) );
 
 		//
-		// Redo the call to the initializer for the __TRY region with the first argument(IsExcept) as 1
+		// Since context has been unwound back to the return address of the init __TRY function,
+		// we set the return value to 0 to indicate failure. This will make it jump to the __EXCEPT region
 		//
 		ContextRecord->Rax = FALSE;
 
