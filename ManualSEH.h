@@ -23,6 +23,8 @@
 #include <Windows.h>
 #endif
 
+#define __MSEH_EXIT_TRY( ) ManualSehPopEntry( ManualSehCurrentThread( ) )
+
 /*
 * @brief Starting statement of the ManualSEH __TRY scope.
 *		 When an exception occurs within this scope, it will be unwound to the
@@ -42,14 +44,12 @@
                             _                    \
                       }
 
-
-
 DECLSPEC_ALIGN( 2048 ) 
 typedef struct _MANUALSEH_DATA
 {
+	CONTEXT SavedContext;
 	BOOLEAN Active;
 	HANDLE  ThreadID;
-	CONTEXT SavedContext;
 }MANUALSEH_DATA, *PMANUALSEH_DATA;
 
 namespace ManualSEH
@@ -94,15 +94,37 @@ namespace ManualSEH
 		);
 }
 
+/*
+* @brief Pop the latest entry belonging to a given thread id back off the list
+* 
+* @param [in] ThreadId: The current thread identifier
+* 
+* @return TRUE if the latest entry was found and removed off the list
+* @return FALSE if there was no entry belonging to the thread id in the first place
+*/
+DECLSPEC_NOINLINE
+BOOLEAN
+ManualSehPopEntry(
+	IN HANDLE ThreadId
+	);
+
 EXTERN_C
 { 
+	DECLSPEC_NOINLINE
+	HANDLE
+	ManualSehCurrentThread( 
+		VOID 
+		);
+
+	DECLSPEC_NOINLINE
+	BOOLEAN
+	ManualSehPushEntry( 
+		IN PCONTEXT ContextRecord,
+		IN HANDLE   ThreadId
+		);
+
 	UINT64
 	__MSEH_ENTER_TRY(
-	    VOID
-	    );
-	
-	VOID
-	__MSEH_EXIT_TRY(
 	    VOID
 	    );
 }
