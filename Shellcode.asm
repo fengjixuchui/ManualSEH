@@ -9,6 +9,13 @@ EXTERN ManualSehCurrentThread : PROC
 
 .code
 
+;
+; CaptureContext
+;
+;	Capture the current thread context for __MSEH_ENTER_TRY
+;
+;	Reference: ntoskrnl.exe!RtlCaptureContext
+;
 CaptureContext MACRO
 	pushfq
 
@@ -79,6 +86,11 @@ CaptureContext MACRO
 	;
 ENDM
 
+;
+; __MSEH_ENTER_TRY
+;
+;	Capture the caller context to the stack and push it to an entry on g_SEHData
+;
 __MSEH_ENTER_TRY PROC
 	push rbp
 	mov rbp, rsp
