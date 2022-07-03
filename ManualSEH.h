@@ -14,7 +14,12 @@
 //
 // Choose wether or not to use ManualSEH in kernelmode
 //
-#define MANUALSEH_KERNEL_MODE 0 // ( 1 or 0 )
+#define MANUALSEH_KERNEL_MODE 0  // ( 1 or 0 )
+//
+// Maximum number of entries allowed to be allocated
+// for stored context snapshots
+//
+#define MANUALSEH_MAX_ENTRIES 64 //
 //////////////////////////////////////////////
 
 #if MANUALSEH_KERNEL_MODE

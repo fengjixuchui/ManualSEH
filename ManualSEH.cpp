@@ -6,20 +6,15 @@
 
 #include "ManualSEH.h"
 
-#define MANUALSEH_MAX_ENTRIES     64
 #define	MANUALSEH_START_TRY_MAGIC 0xDEADBEEF000005E1
 #define	MANUALSEH_END_TRY_MAGIC   0xDEADBEEF000005E2
 
 #if MANUALSEH_KERNEL_MODE
-
 #define ManualSehAlloc( Len )  ExAllocatePool( NonPagedPool, Len )
 #define ManualSehFree( Block ) ExFreePool    ( Block )
-
 #else
-
 #define ManualSehAlloc( Len )  VirtualAlloc( NULL, Len, MEM_COMMIT, PAGE_READWRITE )
 #define ManualSehFree( Block ) VirtualFree ( Block, NULL, MEM_RELEASE )
-
 #endif
 
 PMANUALSEH_DATA ManualSEH::g_SEHData = NULL;
@@ -36,10 +31,14 @@ ManualSehCurrentThread(
 #if MANUALSEH_KERNEL_MODE
 	return PsGetCurrentThreadId( );
 #else
-	return GetCurrentThread( );
+	return ( HANDLE )GetCurrentThreadId( );
 #endif
 }
 
+//
+// Make a spin lock to prevent very rare race conditions
+//
+BOOLEAN g_ManualSehPushEntry_Lock = FALSE;
 /*
 * @brief Takes a snapshot of the current context and pushes it to g_SEHData
 *		 along with a thread identifier and an active status
@@ -57,9 +56,17 @@ ManualSehPushEntry(
 	IN HANDLE   ThreadId
 	)
 {
+	BOOLEAN Result = FALSE;
+
 	if ( ManualSEH::g_SEHData == NULL ) {
-		return FALSE;
+		return Result;
 	}
+  
+	//
+	// Acquire the spinlock 
+	//
+	while ( _InterlockedExchange8( ( CHAR* )&g_ManualSehPushEntry_Lock, TRUE ) == TRUE )
+		;
 
 	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
 	{
@@ -69,28 +76,28 @@ ManualSehPushEntry(
 		// If the current entry is already occupied by an active entry,
 		// continue searching for the next available slot
 		//
-		if ( CurrentEntry->Active == TRUE ) {
-			continue;
+		if ( CurrentEntry->Active == FALSE ) 
+		{
+			Result = TRUE;
+
+			//
+			// Save the current context snapshot in the available entry
+			//
+			RtlCopyMemory( &CurrentEntry->SavedContext, ContextRecord, sizeof( CONTEXT ) );
+
+			CurrentEntry->Active   = TRUE;
+			CurrentEntry->ThreadID = ThreadId;
+
+			break;
 		}
-
-		//
-		// Save the current context snapshot in the available entry
-		//
-		RtlCopyMemory( &CurrentEntry->SavedContext, ContextRecord, sizeof( CONTEXT ) );
-
-		//
-		// Unwind the stored context to the return address
-		//
-		//CurrentEntry->SavedContext.Rip =  *( UINT64* )ContextRecord->Rsp;
-		//CurrentEntry->SavedContext.Rsp += 0x8;
-
-		CurrentEntry->Active   = TRUE;
-		CurrentEntry->ThreadID = ThreadId;
-
-		return TRUE;
 	}
 
-	return FALSE;
+	//
+	// Release the spinlock
+	//
+	g_ManualSehPushEntry_Lock = FALSE;
+
+	return Result;
 }
 
 /*

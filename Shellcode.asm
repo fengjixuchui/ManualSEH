@@ -41,9 +41,9 @@ CaptureContext MACRO
 	mov     word ptr [rsp+048h], gs
 
 	push	rbp
-	mov	rbp, [rsp+4E0h]
+	mov		rbp, [rsp+4E0h]
 	mov     [rsp+0B0h], rbp
-	pop	rbp
+	pop		rbp
 
 	mov     [rsp+098h], rbx
 	mov     [rsp+0B0h], rsi
@@ -89,11 +89,11 @@ __MSEH_ENTER_TRY PROC
 	sub rsp, 04D0h
 	CaptureContext
 
-	xor rax, rax
 	call ManualSehCurrentThread
 
 	mov rcx, rsp
 	mov rdx, rax
+	xor rax, rax
 	call ManualSehPushEntry
 
 	mov rsp, rbp
