@@ -36,13 +36,13 @@
 *		 adjacent __EXCEPT scope.
 */
 #define __TRY    if ( __MSEH_ENTER_TRY( ) ) \
-				 {
+                 {
 /*
 * @brief Statring statement of the ManualSEH __TRY scope.
 *		 When an exception occurs within this scope, it will be unwound to this location.
 */
 #define __EXCEPT     __MSEH_EXIT_TRY( );    \
-				 }                          \
+                 }                          \
                  else
 
 DECLSPEC_ALIGN( 2048 ) 
