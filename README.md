@@ -15,13 +15,13 @@ A lightweight utility containing manually written SEH for manually mapped images
 int main( void )
 {
     __TRY
-    (
+    {
         *( int* )( 0 ) = 69;
-    )
+    }
     __EXCEPT
-    (
+    {
         printf( "Exception caught...\n" );
-    )
+    }
 }
 ```
 ## Nested __TRY __EXCEPT statements
@@ -31,21 +31,21 @@ int main( void )
 int main( void )
 {
     __TRY
-    (
+    {
         __TRY
-        (
+        {
             *( int* )( 0 ) = 69;
-        )
+        }
         __EXCEPT
-        (
+        {
             printf( "Nested exception caught...\n" );
-        )
+        }
         
         *( int* )( 0 ) = 69;
-    )
+    }
     __EXCEPT
-    (
+    {
         printf( "Exception caught...\n" );
-    )
+    }
 }
 ```

@@ -6,26 +6,39 @@
 
 #include "ManualSEH.h"
 
-#define MANUALSEH_MAX_ENTRIES     64
 #define	MANUALSEH_START_TRY_MAGIC 0xDEADBEEF000005E1
 #define	MANUALSEH_END_TRY_MAGIC   0xDEADBEEF000005E2
 
 #if MANUALSEH_KERNEL_MODE
-
-#define ManualSehCurrentThread PsGetCurrentThreadId
 #define ManualSehAlloc( Len )  ExAllocatePool( NonPagedPool, Len )
 #define ManualSehFree( Block ) ExFreePool    ( Block )
-
 #else
-
-#define ManualSehCurrentThread GetCurrentThread
 #define ManualSehAlloc( Len )  VirtualAlloc( NULL, Len, MEM_COMMIT, PAGE_READWRITE )
 #define ManualSehFree( Block ) VirtualFree ( Block, NULL, MEM_RELEASE )
-
 #endif
 
 PMANUALSEH_DATA ManualSEH::g_SEHData = NULL;
 
+/*
+* @brief Obtain the current thread Id
+*/
+DECLSPEC_NOINLINE
+HANDLE
+ManualSehCurrentThread( 
+	VOID 
+	)
+{
+#if MANUALSEH_KERNEL_MODE
+	return PsGetCurrentThreadId( );
+#else
+	return ( HANDLE )GetCurrentThreadId( );
+#endif
+}
+
+//
+// Make a spin lock to prevent very rare race conditions
+//
+BOOLEAN g_ManualSehPushEntry_Lock = FALSE;
 /*
 * @brief Takes a snapshot of the current context and pushes it to g_SEHData
 *		 along with a thread identifier and an active status
@@ -43,9 +56,17 @@ ManualSehPushEntry(
 	IN HANDLE   ThreadId
 	)
 {
+	BOOLEAN Result = FALSE;
+
 	if ( ManualSEH::g_SEHData == NULL ) {
-		return FALSE;
+		return Result;
 	}
+  
+	//
+	// Acquire the spinlock 
+	//
+	while ( _InterlockedExchange8( ( CHAR* )&g_ManualSehPushEntry_Lock, TRUE ) == TRUE )
+		;
 
 	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
 	{
@@ -55,28 +76,28 @@ ManualSehPushEntry(
 		// If the current entry is already occupied by an active entry,
 		// continue searching for the next available slot
 		//
-		if ( CurrentEntry->Active == TRUE ) {
-			continue;
+		if ( CurrentEntry->Active == FALSE ) 
+		{
+			Result = TRUE;
+
+			//
+			// Save the current context snapshot in the available entry
+			//
+			RtlCopyMemory( &CurrentEntry->SavedContext, ContextRecord, sizeof( CONTEXT ) );
+
+			CurrentEntry->Active   = TRUE;
+			CurrentEntry->ThreadID = ThreadId;
+
+			break;
 		}
-
-		//
-		// Save the current context snapshot in the available entry
-		//
-		RtlCopyMemory( &CurrentEntry->SavedContext, ContextRecord, sizeof( CONTEXT ) );
-
-		//
-		// Unwind the stored context to the return address
-		//
-		CurrentEntry->SavedContext.Rip =  *( UINT64* )ContextRecord->Rsp;
-		CurrentEntry->SavedContext.Rsp += 0x8;
-
-		CurrentEntry->Active   = TRUE;
-		CurrentEntry->ThreadID = ThreadId;
-
-		return TRUE;
 	}
 
-	return FALSE;
+	//
+	// Release the spinlock
+	//
+	g_ManualSehPushEntry_Lock = FALSE;
+
+	return Result;
 }
 
 /*
@@ -105,7 +126,7 @@ ManualSehGetCurrentEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-		      CurrentEntry->ThreadID == ThreadId ) 
+			  CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			return CurrentEntry;
 		}
@@ -141,7 +162,7 @@ ManualSehPopEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-		      CurrentEntry->ThreadID == ThreadId ) 
+			  CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			CurrentEntry->Active = FALSE;
 
@@ -162,46 +183,6 @@ ManualSEH::ExceptionHandler(
 	if ( g_SEHData == NULL ) {
 		return FALSE;
 	}
-
-	if ( ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT )
-	{
-		//
-		// Did the exception specify the start of a __TRY region?
-		//
-		if ( ContextRecord->Rax == MANUALSEH_START_TRY_MAGIC )
-		{
-			//
-			// Push an unwound state of the context record onto the list of entries
-			//
-			ManualSehPushEntry( ContextRecord, ManualSehCurrentThread( ) );
-
-			//
-			// Skip the breakpoint and continue execution 
-			//
-			ContextRecord->Rip += 0x1;
-
-			return TRUE;
-		}
-
-		//
-		// Did the exception specify the end of a __TRY region?
-		//
-		if ( ContextRecord->Rax == MANUALSEH_END_TRY_MAGIC )
-		{
-			//
-			// Pop the latest context back off the list of entries as we don't need it
-			// since we didn't crash inside the __TRY region
-			//
-			ManualSehPopEntry( ManualSehCurrentThread( ) );
-
-			//
-			// Skip the breakpoint and continue execution
-			// 
-			ContextRecord->Rip += 0x1;
-
-			return TRUE;
-		}
-	} 
 
 	//
 	// Attempt to obtain the latest entry in the list
