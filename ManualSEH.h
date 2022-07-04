@@ -16,6 +16,11 @@
 //
 #define MANUALSEH_KERNEL_MODE 0  // ( 1 or 0 )
 //
+// Choose wether or not to obtain exception info to be
+// used in the __EXCEPT region
+//
+#define MANUALSEH_OBTAIN_INFO 0  // ( 1 or 0 )
+//
 // Maximum number of entries allowed to be allocated
 // for stored context snapshots
 //
@@ -36,13 +41,13 @@
 *		 adjacent __EXCEPT scope.
 */
 #define __TRY    if ( __MSEH_ENTER_TRY( ) ) \
-                 {
+				 {
 /*
 * @brief Statring statement of the ManualSEH __TRY scope.
 *		 When an exception occurs within this scope, it will be unwound to this location.
 */
 #define __EXCEPT     __MSEH_EXIT_TRY( );    \
-                 }                          \
+				 }                          \
                  else
 
 DECLSPEC_ALIGN( 2048 ) 
@@ -53,12 +58,45 @@ typedef struct _MANUALSEH_DATA
 	HANDLE  ThreadID;
 }MANUALSEH_DATA, *PMANUALSEH_DATA;
 
+DECLSPEC_ALIGN( 2048 )
+typedef struct _MANUALSEH_RECORD
+{
+	CONTEXT          ContextRecord;
+	EXCEPTION_RECORD ExceptionRecord;
+	HANDLE           ThreadID;
+}MANUALSEH_RECORD, *PMANUALSEH_RECORD;
+
 namespace ManualSEH
 {
 	//
 	// Global buffer containing space for 64 total MANUALSEH_DATA objects
 	//
 	extern PMANUALSEH_DATA g_SEHData;
+
+#if MANUALSEH_OBTAIN_INFO
+	//
+	// Global buffer containing space for 64 total MANUALSEH_RECORD objects
+	//
+	extern PMANUALSEH_RECORD g_SEHRecords;
+
+	/**
+	 * @brief Obtain the context record of the current exception in an __EXCEPT region
+	*/
+	DECLSPEC_NOINLINE
+	PCONTEXT
+	GetExceptionContext( 
+		VOID 
+		);
+
+	/**
+	 * @brief Obtain the exception record of the current exception in an __EXCEPT region
+	*/
+	DECLSPEC_NOINLINE
+	PEXCEPTION_RECORD
+	GetExceptionRecord( 
+		VOID 
+		);
+#endif
 
 	/**
 	 * @brief Initialize ManualSEH
