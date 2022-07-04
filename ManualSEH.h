@@ -16,7 +16,7 @@
 //
 #define MANUALSEH_KERNEL_MODE 0  // ( 1 or 0 )
 //
-// Choose wether or not to obtain exception info to be
+// Choose whether or not to obtain exception info to be
 // used in the __EXCEPT region
 //
 #define MANUALSEH_OBTAIN_INFO 0  // ( 1 or 0 )
