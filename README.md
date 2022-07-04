@@ -51,7 +51,9 @@ int main( void )
 }
 ```
 ## Obtaining exception record or context record
-##### MANUALSEH_OBTAIN_INFO needs to be set to 1 for this to work
+To obtain the context record or exception record belonging to the current exception simply use the following APIs
+`ManualSEH::GetExceptionRecord( );`
+`ManualSEH::GetContextRecord( );`
 ```cpp
 #include "ManualSEH.h"
 
