@@ -51,7 +51,7 @@ int main( void )
 }
 ```
 ## Obtaining additional information about the exception
-##### To obtain information belonging to the most recent exception simply use one of the following APIs:
+##### To obtain information belonging to the most recent exception simply use one of the following API functions:
 `ManualSEH::GetExceptionRecord( );`
 `ManualSEH::GetContextRecord( );`
 `ManualSEH::GetCode( );`
