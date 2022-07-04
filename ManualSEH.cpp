@@ -389,10 +389,8 @@ ManualSEH::Shutdown(
 {
 	ManualSehFree( g_SEHData );
 	g_SEHData = NULL;
-
 #if MANUALSEH_OBTAIN_INFO
 	ManualSehFree( g_SEHRecords );
 	g_SEHRecords = NULL;
 #endif
 }
-
