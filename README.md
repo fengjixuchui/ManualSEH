@@ -6,6 +6,7 @@ A lightweight utility containing manually written SEH for manually mapped images
 * Asynchronous, thread safe performance
 * Supports exceptions that occur deeper within the call stack and outside the executable
 * Supports nested __TRY __EXCEPT statements
+* Supports obtaining both the exception record and the context record of the exception inside a __EXCEPT region
 
 # Examples
 ## Regular __TRY __EXCEPT statements
@@ -46,6 +47,27 @@ int main( void )
     __EXCEPT
     {
         printf( "Exception caught...\n" );
+    }
+}
+```
+## Obtaining exception record or context record
+To obtain the context record or exception record belonging to the current exception simply use the following APIs
+`ManualSEH::GetExceptionRecord( );`
+`ManualSEH::GetContextRecord( );`
+```cpp
+#include "ManualSEH.h"
+
+int main( void )
+{
+    __TRY
+    {
+        *( int* )( 0 ) = 69;
+    }
+    __EXCEPT
+    {
+        PEXCEPTION_RECORD ExceptionRecord = ManualSEH::GetExceptionRecord( );
+        
+        printf( "Exception caught... (Exception code: %08X)\n", ExceptionRecord->ExceptionCode );
     }
 }
 ```

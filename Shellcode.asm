@@ -48,9 +48,9 @@ CaptureContext MACRO
 	mov     word ptr [rsp+048h], gs
 
 	push	rbp
-	mov		rbp, [rsp+4E0h]
+	mov	rbp, [rsp+4E0h]
 	mov     [rsp+0B0h], rbp
-	pop		rbp
+	pop	rbp
 
 	mov     [rsp+098h], rbx
 	mov     [rsp+0B0h], rsi

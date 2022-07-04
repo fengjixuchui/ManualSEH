@@ -17,7 +17,10 @@
 #define ManualSehFree( Block ) VirtualFree ( Block, NULL, MEM_RELEASE )
 #endif
 
-PMANUALSEH_DATA ManualSEH::g_SEHData = NULL;
+PMANUALSEH_DATA   ManualSEH::g_SEHData    = NULL;
+#if MANUALSEH_OBTAIN_INFO
+PMANUALSEH_RECORD ManualSEH::g_SEHRecords = NULL;
+#endif
 
 /*
 * @brief Obtain the current thread Id
@@ -36,7 +39,7 @@ ManualSehCurrentThread(
 }
 
 //
-// Make a spin lock to prevent very rare race conditions
+// Spinlock to prevent very rare race conditions
 //
 BOOLEAN g_ManualSehPushEntry_Lock = FALSE;
 /*
@@ -173,6 +176,129 @@ ManualSehPopEntry(
 	return FALSE;
 }
 
+#if MANUALSEH_OBTAIN_INFO
+//
+// Spinlock to prevent very rare race conditions
+//
+BOOLEAN g_ManualSehPushRecord_Lock = FALSE;
+/*
+* @brief Takes the current context and exception record pushes it to g_SEHRecords
+*		 along with a thread identifier and an active status
+* 
+* @param [in] ContextRecord: The current context record
+* @param [in] ExceptionRecord: The current exception record
+* 
+* @return TRUE if there was an available slot and the record was pushed
+* @return FALSE if there were no available slots to push the record to
+*/
+DECLSPEC_NOINLINE
+BOOLEAN
+ManualSehPushRecord( 
+	IN PCONTEXT          ContextRecord,
+	IN PEXCEPTION_RECORD ExceptionRecord,
+	IN HANDLE            ThreadId
+	)
+{
+	BOOLEAN Result = FALSE;
+
+	if ( ManualSEH::g_SEHRecords == NULL )
+	{
+		return Result;
+	}
+
+	//
+	// Acquire the spinlock
+	//
+	while ( _InterlockedExchange8( ( CHAR* )&g_ManualSehPushRecord_Lock, TRUE ) == TRUE )
+		;
+
+	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
+	{
+		PMANUALSEH_RECORD CurrentRecord = &ManualSEH::g_SEHRecords[ i ];
+
+		if ( ( CurrentRecord->ThreadID == ThreadId ) ||
+		       CurrentRecord->ThreadID == NULL )
+		{
+			Result = TRUE;
+
+			RtlCopyMemory( &CurrentRecord->ContextRecord, ContextRecord, sizeof( CONTEXT ) );
+			RtlCopyMemory( &CurrentRecord->ExceptionRecord, ExceptionRecord, sizeof( EXCEPTION_RECORD ) );
+
+			CurrentRecord->ThreadID = ThreadId;
+
+			break;
+		}
+	}
+
+	//
+	// Release the spinlock
+	//
+	g_ManualSehPushRecord_Lock = FALSE;
+
+	return Result;
+}
+
+/*
+* @brief Obtain the last info record belonging to the given thread id that was pushed
+* 
+* @param [in] ThreadId: The current thread identifier
+* 
+* @return TRUE if the record belonging to the thread id exists and was obtained
+* @return FALSE if the record belonging to the thread id does not exist
+*/
+DECLSPEC_NOINLINE
+PMANUALSEH_RECORD
+ManualSehGetCurrentRecord( 
+	IN HANDLE ThreadId 
+	)
+{
+	if ( ManualSEH::g_SEHRecords == NULL ) {
+		return NULL;
+	}
+
+	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
+	{
+		PMANUALSEH_RECORD CurrentEntry = &ManualSEH::g_SEHRecords[ i ];
+
+		if ( CurrentEntry->ThreadID == ThreadId ) {
+			return CurrentEntry;
+		}
+	}
+
+	return NULL;
+}
+
+DECLSPEC_NOINLINE
+PCONTEXT
+ManualSEH::GetExceptionContext( 
+	VOID 
+	)
+{
+	PMANUALSEH_RECORD CurrentRecord = ManualSehGetCurrentRecord( ManualSehCurrentThread( ) );
+
+	if ( CurrentRecord != NULL ) {
+		return &CurrentRecord->ContextRecord;
+	}
+
+	return NULL;
+}
+
+DECLSPEC_NOINLINE
+PEXCEPTION_RECORD
+ManualSEH::GetExceptionRecord(
+	VOID
+	)
+{	
+	PMANUALSEH_RECORD CurrentRecord = ManualSehGetCurrentRecord( ManualSehCurrentThread( ) );
+
+	if ( CurrentRecord != NULL ) {
+		return &CurrentRecord->ExceptionRecord;
+	}
+
+	return NULL;
+}
+#endif
+
 DECLSPEC_NOINLINE
 BOOLEAN
 ManualSEH::ExceptionHandler(
@@ -195,6 +321,14 @@ ManualSEH::ExceptionHandler(
 	//
 	if ( CurrentEntry != NULL )
 	{
+#if MANUALSEH_OBTAIN_INFO
+		//
+		// Push the current context record and exception record to the record buffer
+		// so it can be obtained in a __TRY region
+		//
+		ManualSehPushRecord( ContextRecord, ExceptionRecord, ManualSehCurrentThread( ) );
+#endif
+
 		//
 		// Reset the context back to it's unwound state at the __TRY region
 		//
@@ -228,14 +362,23 @@ ManualSEH::Initialize(
 
 	g_SEHData = ( PMANUALSEH_DATA )ManualSehAlloc( AllocLength );
 
-	if ( g_SEHData != NULL ) 
-	{
-		RtlZeroMemory( g_SEHData, AllocLength );
-
-		return TRUE;
+	if ( g_SEHData == NULL ) {
+		return FALSE;
 	}
 
-	return FALSE;
+	RtlZeroMemory( g_SEHData, AllocLength );
+
+#if MANUALSEH_OBTAIN_INFO
+	g_SEHRecords = ( PMANUALSEH_RECORD )ManualSehAlloc( AllocLength );
+
+	if ( g_SEHRecords == NULL ) {
+		return FALSE;
+	}
+
+	RtlZeroMemory( g_SEHRecords, AllocLength );
+#endif
+
+	return TRUE;
 }
 
 DECLSPEC_NOINLINE
@@ -245,6 +388,11 @@ ManualSEH::Shutdown(
 	)
 {
 	ManualSehFree( g_SEHData );
-
 	g_SEHData = NULL;
+
+#if MANUALSEH_OBTAIN_INFO
+	ManualSehFree( g_SEHRecords );
+	g_SEHRecords = NULL;
+#endif
 }
+
