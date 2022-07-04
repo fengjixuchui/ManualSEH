@@ -50,7 +50,7 @@ int main( void )
     }
 }
 ```
-## Obtaining exception record or context record
+## Obtaining additional information about the exception
 ##### To obtain information belonging to the most recent exception simply use one of the following APIs:
 `ManualSEH::GetExceptionRecord( );`
 `ManualSEH::GetContextRecord( );`
