@@ -129,7 +129,7 @@ ManualSehGetCurrentEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-		      CurrentEntry->ThreadID == ThreadId ) 
+			  CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			return CurrentEntry;
 		}
@@ -165,7 +165,7 @@ ManualSehPopEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-		      CurrentEntry->ThreadID == ThreadId ) 
+			  CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			CurrentEntry->Active = FALSE;
 
@@ -270,7 +270,7 @@ ManualSehGetCurrentRecord(
 
 DECLSPEC_NOINLINE
 PCONTEXT
-ManualSEH::GetExceptionContext( 
+ManualSEH::GetContextRecord( 
 	VOID 
 	)
 {
@@ -293,6 +293,21 @@ ManualSEH::GetExceptionRecord(
 
 	if ( CurrentRecord != NULL ) {
 		return &CurrentRecord->ExceptionRecord;
+	}
+
+	return NULL;
+}
+
+DECLSPEC_NOINLINE
+UINT32
+ManualSEH::GetCode( 
+	VOID 
+	)
+{
+	PMANUALSEH_RECORD CurrentRecord = ManualSehGetCurrentRecord( ManualSehCurrentThread( ) );
+
+	if ( CurrentRecord != NULL ) {
+		return CurrentRecord->ExceptionRecord.ExceptionCode;
 	}
 
 	return NULL;
