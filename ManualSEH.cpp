@@ -129,7 +129,7 @@ ManualSehGetCurrentEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-			  CurrentEntry->ThreadID == ThreadId ) 
+		      CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			return CurrentEntry;
 		}
@@ -165,7 +165,7 @@ ManualSehPopEntry(
 		PMANUALSEH_DATA CurrentEntry = &ManualSEH::g_SEHData[ i - 1 ];
 
 		if  ( CurrentEntry->Active   == TRUE &&
-			  CurrentEntry->ThreadID == ThreadId ) 
+		      CurrentEntry->ThreadID == ThreadId ) 
 		{ 
 			CurrentEntry->Active = FALSE;
 
@@ -389,8 +389,10 @@ ManualSEH::Shutdown(
 {
 	ManualSehFree( g_SEHData );
 	g_SEHData = NULL;
+
 #if MANUALSEH_OBTAIN_INFO
 	ManualSehFree( g_SEHRecords );
 	g_SEHRecords = NULL;
 #endif
 }
+
