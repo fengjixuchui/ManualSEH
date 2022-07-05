@@ -9,6 +9,10 @@ A lightweight utility containing manually written SEH for manually mapped images
 * Supports nested __TRY __EXCEPT statements
 * Supports obtaining both the exception record and the context record of the exception inside a __EXCEPT region
 
+# Starting the ManualSEH API
+Starting the API is fairly straightforward, simply use `ManualSEH::Initialize` to initialize everything
+and make sure `ManualSEH::ExceptionHandler` is running inside a working exception handler.
+
 # Examples
 ## Regular __TRY __EXCEPT statements
 ```cpp
