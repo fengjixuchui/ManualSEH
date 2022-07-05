@@ -5,6 +5,7 @@ A lightweight utility containing manually written SEH for manually mapped images
 * Works in both usermode and kernelmode as long as you have an exception handler
 * Asynchronous, thread safe performance
 * Supports exceptions that occur deeper within the call stack and outside the executable
+* Supports both x86-64 and x86-32
 * Supports nested __TRY __EXCEPT statements
 * Supports obtaining both the exception record and the context record of the exception inside a __EXCEPT region
 
