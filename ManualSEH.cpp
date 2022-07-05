@@ -435,44 +435,44 @@ __MSEH_ENTER_TRY(
 	__asm
 	{
 		push	ebp
-		mov		ebp, esp
-		sub		esp, 0x2CC
+		mov	ebp, esp
+		sub	esp, 0x2CC
 
 		//
 		// CaptureContext 32-bit
 		//
-		mov		[esp + 0B0h], eax
-		mov		[esp + 0ACh], ecx
-		mov		[esp + 0A8h], edx
-		mov		[esp + 0A4h], ebx
-		mov		[esp + 0A0h], esi
-		mov		[esp + 09Ch], edi
-		mov		word ptr[esp + 0BCh], cs
-		mov		word ptr[esp + 098h], ds
-		mov		word ptr[esp + 094h], es
-		mov		word ptr[esp + 090h], fs
-		mov		word ptr[esp + 08Ch], gs
-		mov		word ptr[esp + 0C8h], ss
-		pushfd
-		pop		[esp + 0C0h]
-		mov		eax, [ebp + 4]
-		mov		[esp + 0B8h], eax
-		mov		eax, [ebp]
-		mov		[esp + 0B4h], eax
-		lea		eax, [ebp + 8]
-		mov		[esp + 0C4h], eax
-		mov		dword ptr[esp], 10007h
+		mov	[esp + 0B0h], eax
+		mov	[esp + 0ACh], ecx
+		mov	[esp + 0A8h], edx
+		mov	[esp + 0A4h], ebx
+		mov	[esp + 0A0h], esi
+		mov	[esp + 09Ch], edi
+		mov	word ptr[esp + 0BCh], cs
+		mov	word ptr[esp + 098h], ds
+		mov	word ptr[esp + 094h], es
+		mov	word ptr[esp + 090h], fs
+		mov	word ptr[esp + 08Ch], gs
+		mov	word ptr[esp + 0C8h], ss
+		pushf
+		pop	[esp + 0C0h]
+		mov	eax, [ebp + 4]
+		mov	[esp + 0B8h], eax
+		mov	eax, [ebp]
+		mov	[esp + 0B4h], eax
+		lea	eax, [ebp + 8]
+		mov	[esp + 0C4h], eax
+		mov	dword ptr[esp], 10007h
 		//
 		
 		call	ManualSehCurrentThread
 		push	eax
-		lea		eax, [ esp + 4 ]
+		lea	eax, [ esp + 4 ]
 		push	eax
-		xor		eax, eax
+		xor	eax, eax
 		call	ManualSehPushEntry
-		add		esp, 8
-		mov		esp, ebp
-		pop		ebp
+		add	esp, 8
+		mov	esp, ebp
+		pop	ebp
 		ret
 	}
 }
