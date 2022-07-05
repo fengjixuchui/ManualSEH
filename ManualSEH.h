@@ -1,7 +1,7 @@
 /*
 * @file ManualSEH.h
 * 
-* @brief A lightweight utility that adds a manually written version of SEH for manually mapped images
+* @brief A header that adds a manually written version of SEH for manually mapped images
 *		 or images that do not support or contain any SEH data
 */
 
@@ -50,16 +50,14 @@
                  }                          \
                  else
 
-DECLSPEC_ALIGN( 2048 ) 
-typedef struct _MANUALSEH_DATA
+DECLSPEC_ALIGN( 16 ) typedef struct _MANUALSEH_DATA
 {
 	CONTEXT SavedContext;
 	BOOLEAN Active;
 	HANDLE  ThreadID;
 }MANUALSEH_DATA, *PMANUALSEH_DATA;
 
-DECLSPEC_ALIGN( 2048 )
-typedef struct _MANUALSEH_RECORD
+DECLSPEC_ALIGN( 16 ) typedef struct _MANUALSEH_RECORD
 {
 	CONTEXT          ContextRecord;
 	EXCEPTION_RECORD ExceptionRecord;

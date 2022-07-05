@@ -9,6 +9,10 @@
 #define	MANUALSEH_START_TRY_MAGIC 0xDEADBEEF000005E1
 #define	MANUALSEH_END_TRY_MAGIC   0xDEADBEEF000005E2
 
+#ifndef PAGE_ALIGN
+#define PAGE_ALIGN( _ ) ( ( ( _ ) + 0xFFF ) & ~( 0xFFF ) )
+#endif
+
 #if MANUALSEH_KERNEL_MODE
 #define ManualSehAlloc( Len )  ExAllocatePool( NonPagedPool, Len )
 #define ManualSehFree( Block ) ExFreePool    ( Block )
@@ -365,7 +369,6 @@ ManualSEH::ExceptionHandler(
 		// we set the return value to 0 to indicate failure. This will make it jump to the __EXCEPT region
 		//
 		ContextRecord->__Xax__ = FALSE;
-#undef __Xax__
 
 		return TRUE;
 	}
@@ -379,7 +382,7 @@ ManualSEH::Initialize(
 	VOID 
 	)
 {
-	CONST UINT32 AllocLength = MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_DATA );
+	UINT32 AllocLength = PAGE_ALIGN( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_DATA ) );
 
 	g_SEHData = ( PMANUALSEH_DATA )ManualSehAlloc( AllocLength );
 
@@ -390,6 +393,8 @@ ManualSEH::Initialize(
 	RtlZeroMemory( g_SEHData, AllocLength );
 
 #if MANUALSEH_OBTAIN_INFO
+	AllocLength = PAGE_ALIGN( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_RECORD ) );
+
 	g_SEHRecords = ( PMANUALSEH_RECORD )ManualSehAlloc( AllocLength );
 
 	if ( g_SEHRecords == NULL ) {
@@ -430,44 +435,44 @@ __MSEH_ENTER_TRY(
 	__asm
 	{
 		push	ebp
-		mov	ebp, esp
-		sub	esp, 0x2CC
+		mov		ebp, esp
+		sub		esp, 0x2CC
 
 		//
 		// CaptureContext 32-bit
 		//
-		mov	[esp + 0B0h], eax
-		mov	[esp + 0ACh], ecx
-		mov	[esp + 0A8h], edx
-		mov	[esp + 0A4h], ebx
-		mov	[esp + 0A0h], esi
-		mov	[esp + 09Ch], edi
-		mov	word ptr[esp + 0BCh], cs
-		mov	word ptr[esp + 098h], ds
-		mov	word ptr[esp + 094h], es
-		mov	word ptr[esp + 090h], fs
-		mov	word ptr[esp + 08Ch], gs
-		mov	word ptr[esp + 0C8h], ss
+		mov		[esp + 0B0h], eax
+		mov		[esp + 0ACh], ecx
+		mov		[esp + 0A8h], edx
+		mov		[esp + 0A4h], ebx
+		mov		[esp + 0A0h], esi
+		mov		[esp + 09Ch], edi
+		mov		word ptr[esp + 0BCh], cs
+		mov		word ptr[esp + 098h], ds
+		mov		word ptr[esp + 094h], es
+		mov		word ptr[esp + 090h], fs
+		mov		word ptr[esp + 08Ch], gs
+		mov		word ptr[esp + 0C8h], ss
 		pushfd
-		pop	[esp + 0C0h]
-		mov	eax, [ebp + 4]
-		mov	[esp + 0B8h], eax
-		mov	eax, [ebp]
-		mov	[esp + 0B4h], eax
-		lea	eax, [ebp + 8]
-		mov	[esp + 0C4h], eax
-		mov	dword ptr[esp], 10007h
+		pop		[esp + 0C0h]
+		mov		eax, [ebp + 4]
+		mov		[esp + 0B8h], eax
+		mov		eax, [ebp]
+		mov		[esp + 0B4h], eax
+		lea		eax, [ebp + 8]
+		mov		[esp + 0C4h], eax
+		mov		dword ptr[esp], 10007h
 		//
 		
 		call	ManualSehCurrentThread
 		push	eax
-		lea	eax, [ esp + 4 ]
+		lea		eax, [ esp + 4 ]
 		push	eax
-		xor	eax, eax
+		xor		eax, eax
 		call	ManualSehPushEntry
-		add	esp, 8
-		mov	esp, ebp
-		pop	ebp
+		add		esp, 8
+		mov		esp, ebp
+		pop		ebp
 		ret
 	}
 }
