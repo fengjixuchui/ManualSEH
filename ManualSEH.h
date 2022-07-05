@@ -1,7 +1,7 @@
 /*
 * @file ManualSEH.h
 * 
-* @brief A header that adds a manually written version of SEH for manually mapped images
+* @brief A lightweight utility that adds a manually written version of SEH for manually mapped images
 *		 or images that do not support or contain any SEH data
 */
 
