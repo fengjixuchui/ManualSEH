@@ -365,6 +365,7 @@ ManualSEH::ExceptionHandler(
 		// we set the return value to 0 to indicate failure. This will make it jump to the __EXCEPT region
 		//
 		ContextRecord->__Xax__ = FALSE;
+#undef __Xax__
 
 		return TRUE;
 	}
