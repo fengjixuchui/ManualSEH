@@ -355,11 +355,16 @@ ManualSEH::ExceptionHandler(
 		//
 		ManualSehPopEntry( ManualSehCurrentThread( ) );
 
+#ifdef _WIN64
+#define __Xax__ Rax
+#else
+#define __Xax__ Eax
+#endif
 		//
 		// Since context has been unwound back to the return address of the init __TRY function,
 		// we set the return value to 0 to indicate failure. This will make it jump to the __EXCEPT region
 		//
-		ContextRecord->Rax = FALSE;
+		ContextRecord->__Xax__ = FALSE;
 
 		return TRUE;
 	}
@@ -409,3 +414,61 @@ ManualSEH::Shutdown(
 	g_SEHRecords = NULL;
 #endif
 }
+
+#ifndef _WIN64
+/**
+ * @brief Capture the caller context to the stack and push it to an entry on g_SEHData
+*/
+__declspec( naked )
+DECLSPEC_NOINLINE
+UINT_PTR
+__MSEH_ENTER_TRY( 
+	VOID 
+	)
+{
+	__asm
+	{
+		push	ebp
+		mov		ebp, esp
+		sub		esp, 0x2CC
+
+		//
+		// CaptureContext 32-bit
+		//
+		mov		[esp + 0B0h], eax
+		mov		[esp + 0ACh], ecx
+		mov		[esp + 0A8h], edx
+		mov		[esp + 0A4h], ebx
+		mov		[esp + 0A0h], esi
+		mov		[esp + 09Ch], edi
+		mov		word ptr[esp + 0BCh], cs
+		mov		word ptr[esp + 098h], ds
+		mov		word ptr[esp + 094h], es
+		mov		word ptr[esp + 090h], fs
+		mov		word ptr[esp + 08Ch], gs
+		mov		word ptr[esp + 0C8h], ss
+		pushfd
+		pop		[esp + 0C0h]
+		mov		eax, [ebp + 4]
+		mov		[esp + 0B8h], eax
+		mov		eax, [ebp]
+		mov		[esp + 0B4h], eax
+		lea		eax, [ebp + 8]
+		mov		[esp + 0C4h], eax
+		mov		dword ptr[esp], 10007h
+		//
+		
+		call	ManualSehCurrentThread
+		push	eax
+		lea		eax, [ esp + 4 ]
+		push	eax
+		xor		eax, eax
+		call	ManualSehPushEntry
+		add		esp, 8
+		mov		esp, ebp
+		pop		ebp
+		ret
+	}
+}
+#endif
+

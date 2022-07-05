@@ -4,6 +4,8 @@
 ;	Shellcode for ManualSEH exception handling
 ;
 
+IFDEF RAX ; Is building as x86-64
+
 EXTERN ManualSehPushEntry     : PROC
 EXTERN ManualSehCurrentThread : PROC
 
@@ -47,10 +49,10 @@ CaptureContext MACRO
 	mov     word ptr [rsp+046h], fs
 	mov     word ptr [rsp+048h], gs
 
-	push	rbp
-	mov	rbp, [rsp+4E0h]
+	push    rbp
+	mov		rbp, [rsp+4E0h]
 	mov     [rsp+0B0h], rbp
-	pop	rbp
+	pop     rbp
 
 	mov     [rsp+098h], rbx
 	mov     [rsp+0B0h], rsi
@@ -113,4 +115,5 @@ __MSEH_ENTER_TRY PROC
 	ret
 __MSEH_ENTER_TRY ENDP
 
+ENDIF
 END

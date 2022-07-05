@@ -171,7 +171,7 @@ EXTERN_C
 		IN HANDLE   ThreadId
 		);
 
-	UINT64
+	UINT_PTR
 	__MSEH_ENTER_TRY(
 	    VOID
 	    );
