@@ -14,7 +14,7 @@ Starting the API is fairly straightforward, simply use `ManualSEH::Initialize` t
 and make sure `ManualSEH::ExceptionHandler` is running inside a working exception handler.
 
 # Examples
-## Regular __TRY __EXCEPT statements
+### Regular __TRY __EXCEPT statements
 ```cpp
 #include "ManualSEH.h"
 
@@ -30,7 +30,7 @@ int main( void )
     }
 }
 ```
-## Nested __TRY __EXCEPT statements
+### Nested __TRY __EXCEPT statements
 ```cpp
 #include "ManualSEH.h"
 
@@ -55,7 +55,7 @@ int main( void )
     }
 }
 ```
-## Obtaining additional information about the exception
+### Obtaining additional information about the exception
 ##### To obtain information belonging to the most recent exception simply use one of the following API functions:
 1) `ManualSEH::GetExceptionRecord( );`
 2) `ManualSEH::GetContextRecord( );`
