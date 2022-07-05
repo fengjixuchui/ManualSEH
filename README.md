@@ -52,9 +52,9 @@ int main( void )
 ```
 ## Obtaining additional information about the exception
 ##### To obtain information belonging to the most recent exception simply use one of the following API functions:
-`ManualSEH::GetExceptionRecord( );`
-`ManualSEH::GetContextRecord( );`
-`ManualSEH::GetCode( );`
+1) `ManualSEH::GetExceptionRecord( );`
+2) `ManualSEH::GetContextRecord( );`
+3) `ManualSEH::GetCode( );`
 ```cpp
 #include "ManualSEH.h"
 
