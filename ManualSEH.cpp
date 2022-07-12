@@ -6,11 +6,8 @@
 
 #include "ManualSEH.h"
 
-#define	MANUALSEH_START_TRY_MAGIC 0xDEADBEEF000005E1
-#define	MANUALSEH_END_TRY_MAGIC   0xDEADBEEF000005E2
-
-#ifndef PAGE_ALIGN
-#define PAGE_ALIGN( _ ) ( ( ( _ ) + 0xFFF ) & ~( 0xFFF ) )
+#ifndef ROUND_TO_PAGES
+#define ROUND_TO_PAGES( _ ) ( ( ( _ ) + 0xFFF ) & ~( 0xFFF ) )
 #endif
 
 #if MANUALSEH_KERNEL_MODE
@@ -382,7 +379,7 @@ ManualSEH::Initialize(
 	VOID 
 	)
 {
-	UINT32 AllocLength = PAGE_ALIGN( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_DATA ) );
+	UINT32 AllocLength = ROUND_TO_PAGES( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_DATA ) );
 
 	g_SEHData = ( PMANUALSEH_DATA )ManualSehAlloc( AllocLength );
 
@@ -393,7 +390,7 @@ ManualSEH::Initialize(
 	RtlZeroMemory( g_SEHData, AllocLength );
 
 #if MANUALSEH_OBTAIN_INFO
-	AllocLength = PAGE_ALIGN( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_RECORD ) );
+	AllocLength = ROUND_TO_PAGES( MANUALSEH_MAX_ENTRIES * sizeof( MANUALSEH_RECORD ) );
 
 	g_SEHRecords = ( PMANUALSEH_RECORD )ManualSehAlloc( AllocLength );
 
