@@ -70,7 +70,7 @@ ManualSehPushEntry(
 	// Acquire the spinlock 
 	//
 	while ( _InterlockedExchange8( ( CHAR* )&g_ManualSehPushEntry_Lock, TRUE ) == TRUE )
-		;
+		_mm_pause( );
 
 	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
 	{
@@ -211,7 +211,7 @@ ManualSehPushRecord(
 	// Acquire the spinlock
 	//
 	while ( _InterlockedExchange8( ( CHAR* )&g_ManualSehPushRecord_Lock, TRUE ) == TRUE )
-		;
+		_mm_pause( );
 
 	for ( UINT32 i = NULL; i < MANUALSEH_MAX_ENTRIES; i++ )
 	{
