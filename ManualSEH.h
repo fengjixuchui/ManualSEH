@@ -19,6 +19,11 @@
 // Choose whether or not to obtain exception info to be
 // used in the __EXCEPT region
 //
+// When disabled, the following functions will be unavailable:
+//	ManualSEH::GetExceptionRecord( );
+//	ManualSEH::GetContextRecord( );
+//	ManualSEH::GetCode( );
+//
 #define MANUALSEH_OBTAIN_INFO 1  // ( 1 or 0 )
 //
 // Maximum number of entries allowed to be allocated
