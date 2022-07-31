@@ -33,7 +33,8 @@ ManualSehCurrentThread(
 	)
 {
 #if MANUALSEH_KERNEL_MODE
-	return PsGetCurrentThreadId( );
+	return ( ( UINT64 )PsGetCurrentThreadId ( ) << 32 ) | 
+	         ( UINT64 )PsGetCurrentProcessId( ) )
 #else
 	return ( HANDLE )GetCurrentThreadId( );
 #endif
